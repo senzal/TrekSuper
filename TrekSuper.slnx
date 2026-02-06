@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TrekSuper.Console/TrekSuper.Console.csproj" />
+    <Project Path="src/TrekSuper.Core/TrekSuper.Core.csproj" />
+    <Project Path="src/TrekSuper.GameService/TrekSuper.GameService.csproj" />
+    <Project Path="src/TrekSuper.Shared/TrekSuper.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TrekSuper.Core.Tests/TrekSuper.Core.Tests.csproj" />
+  </Folder>
+</Solution>
