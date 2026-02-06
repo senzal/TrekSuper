@@ -28,7 +28,7 @@ public class PlaytestingTests
 
         // Create game with known seed for reproducibility
         var engine = new GameEngine();
-        engine.NewGame(CoreCoreSkillLevel.Good, CoreCoreGameLength.Short, seed: 12345);
+        engine.NewGame(CoreSkillLevel.Good, CoreGameLength.Short, tournamentSeed: 12345);
 
         // Capture messages
         var messages = new List<string>();
@@ -81,7 +81,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Sector Scan Formatting ===\n");
 
         var engine = new GameEngine();
-        engine.NewGame(CoreSkillLevel.Good, CoreGameLength.Short, seed: 99999);
+        engine.NewGame(CoreSkillLevel.Good, CoreGameLength.Short, tournamentSeed: 99999);
 
         var renderer = new MarkdownRenderer();
         var display = renderer.RenderGameDisplay(engine, new List<string>());
@@ -108,7 +108,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Star Chart Formatting ===\n");
 
         var engine = new GameEngine();
-        engine.NewGame(CoreSkillLevel.Good, CoreGameLength.Short, seed: 54321);
+        engine.NewGame(CoreSkillLevel.Good, CoreGameLength.Short, tournamentSeed: 54321);
 
         var messages = new List<string>();
         engine.OnMessage += msg => messages.Add(msg);
@@ -143,7 +143,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Status Report Formatting ===\n");
 
         var engine = new GameEngine();
-        engine.NewGame(CoreSkillLevel.Expert, CoreGameLength.Long, seed: 777);
+        engine.NewGame(CoreSkillLevel.Expert, CoreGameLength.Long, tournamentSeed: 777);
 
         var messages = new List<string>();
         engine.OnMessage += msg => messages.Add(msg);
@@ -173,7 +173,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Navigation Sequence ===\n");
 
         var gameService = new GameStateManager(new MarkdownRenderer());
-        var newGame = gameService.CreateGame(CoreSkillLevel.Novice, CoreGameLength.Short, seed: 111);
+        var newGame = gameService.CreateGame(SkillLevel.Novice, GameLength.Short, seed: 111);
         var gameId = newGame.GameId;
 
         _output.WriteLine($"Game created: {gameId}");
@@ -231,7 +231,7 @@ public class PlaytestingTests
             if (gameId != Guid.Empty)
                 gameService.RemoveGame(gameId);
 
-            gameResponse = gameService.CreateGame(CoreSkillLevel.Novice, CoreGameLength.Short, seed);
+            gameResponse = gameService.CreateGame(SkillLevel.Novice, GameLength.Short, seed);
             gameId = gameResponse.GameId;
 
             var scan = gameService.ExecuteCommand(gameId, "SRSCAN", Array.Empty<string>());
@@ -253,7 +253,7 @@ public class PlaytestingTests
 
         // Raise shields
         _output.WriteLine("\n--- Raising shields ---");
-        var shieldResult = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "500" });
+        var shieldResult = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "TRANSFER", "500" });
         _output.WriteLine($"Shield command: {shieldResult.Success}");
         _output.WriteLine($"Shields: {shieldResult.Display.Status.Shield}");
 
@@ -281,7 +281,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Complete Game Session ===\n");
 
         var gameService = new GameStateManager(new MarkdownRenderer());
-        var game = gameService.CreateGame(CoreSkillLevel.Novice, CoreGameLength.Short, seed: 42);
+        var game = gameService.CreateGame(SkillLevel.Novice, GameLength.Short, seed: 42);
         var gameId = game.GameId;
 
         _output.WriteLine($"Mission: Destroy {game.InitialDisplay.Status.RemainingKlingons} Klingons");
@@ -297,7 +297,7 @@ public class PlaytestingTests
             ("LRSCAN", Array.Empty<string>(), "Long range scan"),
             ("CHART", Array.Empty<string>(), "View galaxy"),
             ("DAMAGE", Array.Empty<string>(), "Check damage"),
-            ("SHIELDS", new[] { "200" }, "Adjust shields"),
+            ("SHIELDS", new[] { "TRANSFER", "200" }, "Adjust shields"),
             ("COMPUTER", Array.Empty<string>(), "Use computer"),
         };
 
@@ -346,7 +346,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: All Commands Executable ===\n");
 
         var gameService = new GameStateManager(new MarkdownRenderer());
-        var game = gameService.CreateGame(CoreSkillLevel.Good, CoreGameLength.Short, seed: 999);
+        var game = gameService.CreateGame(SkillLevel.Good, GameLength.Short, seed: 999);
         var gameId = game.GameId;
 
         // Test every command at least once
@@ -358,7 +358,7 @@ public class PlaytestingTests
             { "CHART", Array.Empty<string>() },
             { "DAMAGE", Array.Empty<string>() },
             { "COMPUTER", Array.Empty<string>() },
-            { "SHIELDS", new[] { "100" } },
+            { "SHIELDS", new[] { "UP" } },
             { "SETWARP", new[] { "5.0" } },
             { "SCORE", Array.Empty<string>() },
             { "HELP", Array.Empty<string>() },
@@ -410,7 +410,7 @@ public class PlaytestingTests
         _output.WriteLine("=== PLAYTEST: Edge Cases ===\n");
 
         var gameService = new GameStateManager(new MarkdownRenderer());
-        var game = gameService.CreateGame(CoreSkillLevel.Good, CoreGameLength.Short, seed: 555);
+        var game = gameService.CreateGame(SkillLevel.Good, GameLength.Short, seed: 555);
         var gameId = game.GameId;
 
         // Test 1: Invalid command
@@ -428,13 +428,13 @@ public class PlaytestingTests
 
         // Test 3: Command with invalid arguments
         _output.WriteLine("\nTest 3: Invalid arguments");
-        var invalidArgs = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "abc" });
+        var invalidArgs = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "TRANSFER", "abc" });
         Assert.False(invalidArgs.Success);
         _output.WriteLine($"  ✓ Handled invalid args: {invalidArgs.ErrorMessage}");
 
         // Test 4: Excessive shield allocation
         _output.WriteLine("\nTest 4: Excessive shield allocation");
-        var excessShields = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "99999" });
+        var excessShields = gameService.ExecuteCommand(gameId, "SHIELDS", new[] { "TRANSFER", "99999" });
         // Should either fail or cap at max energy
         _output.WriteLine($"  ✓ Handled excessive shields (Success: {excessShields.Success})");
 
@@ -456,9 +456,9 @@ public class PlaytestingTests
         var gameService = new GameStateManager(new MarkdownRenderer());
 
         // Create 3 different games
-        var game1 = gameService.CreateGame(CoreSkillLevel.Novice, CoreGameLength.Short, seed: 100);
-        var game2 = gameService.CreateGame(CoreSkillLevel.Expert, CoreGameLength.Long, seed: 200);
-        var game3 = gameService.CreateGame(CoreSkillLevel.Good, CoreGameLength.Medium, seed: 300);
+        var game1 = gameService.CreateGame(SkillLevel.Novice, GameLength.Short, seed: 100);
+        var game2 = gameService.CreateGame(SkillLevel.Expert, GameLength.Long, seed: 200);
+        var game3 = gameService.CreateGame(SkillLevel.Good, GameLength.Medium, seed: 300);
 
         _output.WriteLine($"Game 1: {game1.GameId} - {game1.InitialDisplay.Status.RemainingKlingons} Klingons");
         _output.WriteLine($"Game 2: {game2.GameId} - {game2.InitialDisplay.Status.RemainingKlingons} Klingons");
@@ -467,9 +467,9 @@ public class PlaytestingTests
         // Execute different commands on each game
         _output.WriteLine("\n--- Executing commands on each game ---");
 
-        var r1 = gameService.ExecuteCommand(game1.GameId, "SHIELDS", new[] { "100" });
-        var r2 = gameService.ExecuteCommand(game2.GameId, "SHIELDS", new[] { "200" });
-        var r3 = gameService.ExecuteCommand(game3.GameId, "SHIELDS", new[] { "300" });
+        var r1 = gameService.ExecuteCommand(game1.GameId, "SHIELDS", new[] { "TRANSFER", "100" });
+        var r2 = gameService.ExecuteCommand(game2.GameId, "SHIELDS", new[] { "TRANSFER", "200" });
+        var r3 = gameService.ExecuteCommand(game3.GameId, "SHIELDS", new[] { "TRANSFER", "300" });
 
         _output.WriteLine($"Game 1 shields: {r1.Display.Status.Shield}");
         _output.WriteLine($"Game 2 shields: {r2.Display.Status.Shield}");
