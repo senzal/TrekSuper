@@ -13,6 +13,12 @@ public abstract class BaseCommand : IGameCommand
     public abstract string Abbreviation { get; }
     public abstract string HelpText { get; }
 
+    /// <summary>
+    /// Detailed help text shown when user types "HELP commandname".
+    /// Override to provide comprehensive usage instructions.
+    /// </summary>
+    public virtual string? DetailedHelpText => null;
+
     protected BaseCommand(GameEngine engine)
     {
         Engine = engine;

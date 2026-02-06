@@ -60,6 +60,28 @@ public class NavigationService
             return false;
         }
 
+        // Check trajectory for obstacles BEFORE moving
+        var obstacles = CheckTrajectory(direction, distance);
+        if (obstacles.Count > 0)
+        {
+            _engine.Warning("*** NAVIGATION ALERT ***");
+            _engine.Warning($"Projected course intercepts {obstacles.Count} object(s):");
+            foreach (var (obstacleType, sector, distance_to) in obstacles)
+            {
+                string warning = obstacleType switch
+                {
+                    "Star" => $"  ⚠️  STAR at {sector} (distance {distance_to:F1}) - COLLISION WILL DESTROY SHIP!",
+                    "BlackHole" => $"  ⚠️  BLACK HOLE at {sector} (distance {distance_to:F1}) - WILL DESTROY SHIP!",
+                    "Enemy" => $"  ⚠️  Enemy at {sector} (distance {distance_to:F1}) - collision will cause damage",
+                    "Starbase" => $"  ⚠️  Starbase at {sector} (distance {distance_to:F1}) - collision will cause damage",
+                    _ => $"  ⚠️  Object at {sector} (distance {distance_to:F1})"
+                };
+                _engine.Warning(warning);
+            }
+            _engine.Error("Course aborted for safety. Adjust direction or distance.");
+            return false;
+        }
+
         // Calculate time
         double time = 10.0 * distance / ship.WarpFactorSquared;
 
@@ -97,10 +119,91 @@ public class NavigationService
             return false;
         }
 
+        // Check trajectory for obstacles BEFORE moving
+        var obstacles = CheckTrajectory(direction, distance);
+        if (obstacles.Count > 0)
+        {
+            _engine.Warning("*** NAVIGATION ALERT ***");
+            _engine.Warning($"Projected course intercepts {obstacles.Count} object(s):");
+            foreach (var (obstacleType, sector, distance_to) in obstacles)
+            {
+                string warning = obstacleType switch
+                {
+                    "Star" => $"  ⚠️  STAR at {sector} (distance {distance_to:F1}) - COLLISION WILL DESTROY SHIP!",
+                    "BlackHole" => $"  ⚠️  BLACK HOLE at {sector} (distance {distance_to:F1}) - WILL DESTROY SHIP!",
+                    "Enemy" => $"  ⚠️  Enemy at {sector} (distance {distance_to:F1}) - collision will cause damage",
+                    "Starbase" => $"  ⚠️  Starbase at {sector} (distance {distance_to:F1}) - collision will cause damage",
+                    _ => $"  ⚠️  Object at {sector} (distance {distance_to:F1})"
+                };
+                _engine.Warning(warning);
+            }
+            _engine.Error("Course aborted for safety. Adjust direction or distance.");
+            return false;
+        }
+
         // Impulse is slower
         double time = distance / 0.095;
 
         return Move(direction, distance, power, time, isWarp: false);
+    }
+
+    private List<(string Type, SectorCoordinate Sector, double Distance)> CheckTrajectory(double direction, double distance)
+    {
+        var obstacles = new List<(string, SectorCoordinate, double)>();
+        var ship = State.Ship;
+
+        // Calculate trajectory
+        double angle = (15.0 - direction) * Math.PI / 8.0;
+        double dx = -Math.Sin(angle);
+        double dy = Math.Cos(angle);
+
+        // Scale to sectors
+        double totalSectors = distance * 10.0;
+
+        double x = ship.Sector.X;
+        double y = ship.Sector.Y;
+        double distanceMoved = 0;
+        double stepSize = 0.1;
+
+        while (distanceMoved < totalSectors)
+        {
+            x += dx * stepSize;
+            y += dy * stepSize;
+            distanceMoved += stepSize;
+
+            int checkX = (int)Math.Round(x);
+            int checkY = (int)Math.Round(y);
+
+            if (checkX >= 1 && checkX <= 10 && checkY >= 1 && checkY <= 10)
+            {
+                var sector = new SectorCoordinate(checkX, checkY);
+
+                if (sector != ship.Sector)
+                {
+                    var entity = State.CurrentQuadrant?.GetEntityAt(sector);
+
+                    if (entity != null)
+                    {
+                        string entityType = entity switch
+                        {
+                            Star => "Star",
+                            BlackHole => "BlackHole",
+                            Enemy => "Enemy",
+                            Starbase => "Starbase",
+                            _ => "Object"
+                        };
+
+                        // Check if we already reported this obstacle
+                        if (!obstacles.Any(o => o.Item2 == sector))
+                        {
+                            obstacles.Add((entityType, sector, distanceMoved / 10.0));
+                        }
+                    }
+                }
+            }
+        }
+
+        return obstacles;
     }
 
     private bool Move(double direction, double distance, double power, double time, bool isWarp)

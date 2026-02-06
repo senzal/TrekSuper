@@ -59,6 +59,60 @@ public class ImpulseCommand : BaseCommand
     public override string Abbreviation => "IM";
     public override string HelpText => "Move using impulse engines. Usage: IM <direction> <distance>";
 
+    public override string DetailedHelpText => @"
+USAGE:
+  IMPULSE <direction> <distance>
+  IM <direction> <distance>
+
+DESCRIPTION:
+  Move the Enterprise using impulse engines for short-range movement
+  within the current sector or nearby sectors.
+
+PARAMETERS:
+  <direction>  - Direction to move (1-12, like a clock face)
+                 12=up, 3=right, 6=down, 9=left
+                 Use fractional values (e.g., 6.5) for diagonal movement
+
+  <distance>   - Distance in QUADRANTS (1 quadrant = 10 sectors)
+                 0.1 = 1 sector   (precise movement)
+                 0.5 = 5 sectors  (medium range)
+                 1.0 = 10 sectors (maximum impulse range)
+
+DIRECTION MAP:
+        12  1
+    11        2
+  10            3
+ 9      E       4
+  8            5
+    7        6
+
+EXAMPLES:
+  IM 6 0.1     - Move 1 sector straight down
+  IM 3 0.2     - Move 2 sectors to the right
+  IM 12 0.5    - Move 5 sectors straight up
+  IM 9 0.05    - Move half a sector to the left
+
+ENERGY COST:
+  20 + (100 × distance) energy units
+
+IMPORTANT NOTES:
+  • Impulse is limited to 1.0 quadrant maximum range
+  • After each impulse move, enemies will attack if present!
+  • Course is automatically checked for obstacles before moving
+  • If your path would hit a star or black hole, move is aborted
+  • Always raise shields before moving if enemies are nearby
+  • Use SRSCAN to see your surroundings before moving
+
+SAFETY:
+  The navigation computer will warn you if your projected course
+  will intercept any objects (stars, enemies, starbases). The move
+  will be automatically aborted to prevent accidental collisions.
+
+SEE ALSO:
+  WARP      - Long-range movement between quadrants
+  SRSCAN    - View current sector
+  SHIELDS   - Raise/lower shields for protection";
+
     public ImpulseCommand(GameEngine engine) : base(engine) { }
 
     public override Task<CommandResult> ExecuteAsync(GameState state, string[] args)

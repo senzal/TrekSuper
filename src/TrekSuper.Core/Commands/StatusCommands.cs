@@ -206,9 +206,25 @@ public class HelpCommand : BaseCommand
             var cmd = _registry.GetCommand(args[0]);
             if (cmd != null)
             {
-                Message($"\n{cmd.Name} ({cmd.Abbreviation})");
-                Message(cmd.HelpText);
+                Message($"\n*** {cmd.Name} ({cmd.Abbreviation}) ***");
+                Message($"\n{cmd.HelpText}\n");
+
+                if (!string.IsNullOrEmpty(cmd.DetailedHelpText))
+                {
+                    Message(cmd.DetailedHelpText);
+                }
+                else
+                {
+                    Message("(No detailed help available for this command)");
+                }
+
                 return Task.FromResult(CommandResult.Ok());
+            }
+            else
+            {
+                Error($"Unknown command: {args[0]}");
+                Message("Type HELP to see all available commands.");
+                return Task.FromResult(CommandResult.Fail("Unknown command"));
             }
         }
 

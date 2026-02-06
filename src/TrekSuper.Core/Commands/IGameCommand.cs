@@ -23,6 +23,12 @@ public interface IGameCommand
     string HelpText { get; }
 
     /// <summary>
+    /// Detailed help text shown when user types "HELP commandname".
+    /// Returns null if no detailed help is available.
+    /// </summary>
+    string? DetailedHelpText { get; }
+
+    /// <summary>
     /// Executes the command.
     /// </summary>
     Task<CommandResult> ExecuteAsync(GameState state, string[] args);
