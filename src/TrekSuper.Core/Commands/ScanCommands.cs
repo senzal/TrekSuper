@@ -49,14 +49,28 @@ public class LongRangeScanCommand : BaseCommand
 
         var ship = state.Ship;
         Message($"\nLong-range scan from quadrant {ship.Quadrant}:");
-        Message("    1   2   3   4   5   6   7   8");
+
+        // Show column headers for the 3 visible columns
+        int startY = Math.Max(1, ship.Quadrant.Y - 1);
+        int endY = Math.Min(8, ship.Quadrant.Y + 1);
+        string header = "  ";
+        for (int y = startY; y <= endY; y++)
+        {
+            header += $"  {y} ";
+        }
+        Message(header);
 
         for (int x = ship.Quadrant.X - 1; x <= ship.Quadrant.X + 1; x++)
         {
-            string line = $" {x}: ";
+            if (x < 1 || x > 8)
+            {
+                continue; // Skip rows outside galaxy
+            }
+
+            string line = $"{x}:";
             for (int y = ship.Quadrant.Y - 1; y <= ship.Quadrant.Y + 1; y++)
             {
-                if (x < 1 || x > 8 || y < 1 || y > 8)
+                if (y < 1 || y > 8)
                 {
                     line += " ***";
                 }
