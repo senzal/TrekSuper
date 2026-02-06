@@ -20,6 +20,7 @@ public class GameEngine
     public CombatService Combat { get; }
     public NavigationService Navigation { get; }
     public EventService Events { get; }
+    public TutorialService Tutorial { get; }
 
     // Events for UI
     public event Action<string>? OnMessage;
@@ -31,6 +32,7 @@ public class GameEngine
         Combat = new CombatService(this);
         Navigation = new NavigationService(this);
         Events = new EventService(this);
+        Tutorial = new TutorialService(this);
     }
 
     /// <summary>

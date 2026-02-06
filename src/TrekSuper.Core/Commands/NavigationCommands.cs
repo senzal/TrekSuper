@@ -78,13 +78,44 @@ PARAMETERS:
                  0.5 = 5 sectors  (medium range)
                  1.0 = 10 sectors (maximum impulse range)
 
-DIRECTION MAP:
-        12  1
-    11        2
-  10            3
- 9      E       4
-  8            5
-    7        6
+DIRECTION MAP (MERMAID):
+```mermaid
+graph TB
+    subgraph ""Navigation Compass""
+        D12[""12<br/>⬆️ UP""]
+        D1[""1<br/>↗️""]
+        D2[""2<br/>↗️""]
+        D3[""3<br/>➡️ RIGHT""]
+        D4[""4<br/>↘️""]
+        D5[""5<br/>↘️""]
+        D6[""6<br/>⬇️ DOWN""]
+        D7[""7<br/>↙️""]
+        D8[""8<br/>↙️""]
+        D9[""9<br/>⬅️ LEFT""]
+        D10[""10<br/>↖️""]
+        D11[""11<br/>↖️""]
+        E[""🚀<br/>ENTERPRISE""]
+
+        D12 -.-> E
+        D1 -.-> E
+        D2 -.-> E
+        D3 -.-> E
+        D4 -.-> E
+        D5 -.-> E
+        D6 -.-> E
+        D7 -.-> E
+        D8 -.-> E
+        D9 -.-> E
+        D10 -.-> E
+        D11 -.-> E
+    end
+
+    style E fill:#f9f,stroke:#333,stroke-width:4px
+    style D12 fill:#bbf,stroke:#333
+    style D3 fill:#bbf,stroke:#333
+    style D6 fill:#bbf,stroke:#333
+    style D9 fill:#bbf,stroke:#333
+```
 
 EXAMPLES:
   IM 6 0.1     - Move 1 sector straight down

@@ -96,6 +96,19 @@ public class GameStateManager : IGameStateManager
 
             var result = gameCommand.ExecuteAsync(session.Engine.State, args).Result;
 
+            // Notify tutorial system
+            session.Engine.Tutorial.OnCommandExecuted(command, result.Success);
+
+            // Add beginner mode hints if enabled
+            if (session.Engine.Tutorial.IsBeginnerMode)
+            {
+                var hint = session.Engine.Tutorial.GetContextualHint(command, session.Engine.State);
+                if (!string.IsNullOrEmpty(hint))
+                {
+                    session.Engine.Message(hint);
+                }
+            }
+
             var display = _markdownRenderer.RenderGameDisplay(session.Engine, session.MessageHistory);
 
             var outcome = session.Engine.State.IsGameOver
@@ -175,6 +188,7 @@ public class GameStateManager : IGameStateManager
         registry.Register(new Core.Commands.ComputerCommand(engine));
         registry.Register(new Core.Commands.ScoreCommand(engine));
         registry.Register(new Core.Commands.HelpCommand(engine, registry));
+        registry.Register(new Core.Commands.TutorialCommand(engine));
         registry.Register(new Core.Commands.QuitCommand(engine));
     }
 
