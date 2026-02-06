@@ -10,13 +10,15 @@ namespace TrekSuper.Console;
 public class GameClient
 {
     private readonly IGameStateManager _gameService;
+    private readonly DisplaySettings _displaySettings;
     private Guid? _currentGameId;
     private GameDisplayData? _currentDisplay;
 
-    public GameClient()
+    public GameClient(DisplaySettings? displaySettings = null)
     {
         var renderer = new MarkdownRenderer();
         _gameService = new GameStateManager(renderer);
+        _displaySettings = displaySettings ?? DisplaySettings.AutoDetect();
     }
 
     public async Task RunAsync()
@@ -174,7 +176,7 @@ public class GameClient
     private void RenderMermaidAsText(string mermaid)
     {
         // Extract the grid content from mermaid and display it
-        // This is a simple parser for our specific mermaid format
+        // Use emojis if supported, otherwise fall back to ASCII
 
         var lines = mermaid.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var gridLines = lines.Where(l => l.Contains("R") && l.Contains("[\"")).ToList();
@@ -182,7 +184,16 @@ public class GameClient
         if (gridLines.Any())
         {
             AnsiConsole.WriteLine();
-            AnsiConsole.MarkupLine("[bold]Sector Scan:[/]");
+
+            if (_displaySettings.UseEmojis)
+            {
+                AnsiConsole.MarkupLine("[bold]🌌 Sector Scan:[/]");
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[bold]Sector Scan:[/]");
+            }
+
             AnsiConsole.MarkupLine("   1 2 3 4 5 6 7 8 9 10");
 
             int row = 1;
@@ -194,11 +205,42 @@ public class GameClient
                 if (start > 1 && end > start)
                 {
                     var content = line.Substring(start, end - start);
-                    AnsiConsole.MarkupLine($"{row,2} {content}");
+
+                    if (_displaySettings.UseEmojis)
+                    {
+                        // Keep emojis as-is for modern terminals
+                        content = content.Replace("・", " ");
+                        AnsiConsole.MarkupLine($"{row,2} {content}");
+                    }
+                    else
+                    {
+                        // Convert emojis to colored ASCII characters for compatibility
+                        content = content
+                            .Replace("🚀", "[cyan]E[/]")  // Enterprise
+                            .Replace("👾", "[red]K[/]")   // Klingon
+                            .Replace("💀", "[red]C[/]")   // Commander
+                            .Replace("☠️", "[red]S[/]")   // Super-Commander
+                            .Replace("🏰", "[green]B[/]") // Starbase
+                            .Replace("⭐", "[yellow]*[/]") // Star
+                            .Replace("🪐", "[blue]@[/]")   // Planet
+                            .Replace("・", ".");           // Empty space
+
+                        AnsiConsole.MarkupLine($"{row,2} {content}");
+                    }
                     row++;
                 }
             }
             AnsiConsole.WriteLine();
+
+            // Legend
+            if (_displaySettings.UseEmojis)
+            {
+                AnsiConsole.MarkupLine("[dim]🚀=Enterprise 👾=Klingon 💀=Commander 🏰=Starbase ⭐=Star 🪐=Planet[/]");
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[dim]Legend: [cyan]E[/]=Enterprise [red]K[/]=Klingon [red]C[/]=Commander [green]B[/]=Starbase [yellow]*[/]=Star [blue]@[/]=Planet[/]");
+            }
         }
     }
 
