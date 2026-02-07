@@ -148,7 +148,13 @@ public class GameState
     public void EndGame(GameOutcome outcome)
     {
         Outcome = outcome;
+        OnGameEnded?.Invoke(outcome);
     }
+
+    /// <summary>
+    /// Event raised when the game ends. Allows engine to display appropriate messages.
+    /// </summary>
+    public event Action<GameOutcome>? OnGameEnded;
 
     /// <summary>
     /// Advances the stardate and checks for time-based events.
@@ -158,11 +164,22 @@ public class GameState
         Stardate += time;
         TimeRemaining -= time;
 
+        // Warn when time is running low
+        if (TimeRemaining <= 2.0 && TimeRemaining > 0 && !IsGameOver)
+        {
+            OnTimeWarning?.Invoke(TimeRemaining);
+        }
+
         if (TimeRemaining <= 0 && !IsGameOver)
         {
             EndGame(GameOutcome.TimeExpired);
         }
     }
+
+    /// <summary>
+    /// Event raised when time is running low.
+    /// </summary>
+    public event Action<double>? OnTimeWarning;
 }
 
 /// <summary>

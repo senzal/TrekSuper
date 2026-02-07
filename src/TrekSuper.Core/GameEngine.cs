@@ -48,6 +48,10 @@ public class GameEngine
             Random = tournamentSeed.HasValue ? new Random(tournamentSeed.Value) : new Random()
         };
 
+        // Hook up game state events for messaging
+        State.OnGameEnded += HandleGameEnded;
+        State.OnTimeWarning += HandleTimeWarning;
+
         InitializeGalaxy();
         InitializeShip();
         InitializeTime();
@@ -549,5 +553,88 @@ public class GameEngine
         {
             Message($"\nGame over: {State.Outcome}");
         }
+    }
+
+    /// <summary>
+    /// Handles game ended event with appropriate messages.
+    /// </summary>
+    private void HandleGameEnded(GameOutcome outcome)
+    {
+        Error("\n*** GAME OVER ***");
+
+        switch (outcome)
+        {
+            case GameOutcome.TimeExpired:
+                Error("⏰ TIME HAS RUN OUT!");
+                Message($"Mission failed - Klingons still control the galaxy.");
+                Message($"Remaining Klingons: {State.RemainingKlingons}");
+                if (State.RemainingCommanders > 0)
+                    Message($"Remaining Commanders: {State.RemainingCommanders}");
+                if (State.RemainingSuperCommanders > 0)
+                    Message($"Remaining Super-Commanders: {State.RemainingSuperCommanders}");
+                break;
+
+            case GameOutcome.KilledInBattle:
+                Error("💥 THE ENTERPRISE HAS BEEN DESTROYED IN BATTLE!");
+                Message("All hands lost...");
+                break;
+
+            case GameOutcome.EnergyDepleted:
+            case GameOutcome.ResourcesDepleted:
+            case GameOutcome.NegativeEnergy:
+                Error("⚡ OUT OF ENERGY!");
+                Message("The Enterprise has run out of power.");
+                Message("All systems offline... ship adrift in space.");
+                break;
+
+            case GameOutcome.Supernova:
+            case GameOutcome.SupernovaedWhileEscaping:
+                Error("☀️ SHIP DESTROYED IN SUPERNOVA!");
+                Message("The Enterprise was consumed by the stellar explosion.");
+                break;
+
+            case GameOutcome.BlackHole:
+                Error("🕳️ SHIP LOST IN BLACK HOLE!");
+                Message("The Enterprise has been pulled into a black hole.");
+                Message("Ship and crew lost forever...");
+                break;
+
+            case GameOutcome.LifeSupportFailed:
+                Error("💀 LIFE SUPPORT FAILURE!");
+                Message("All crew members have perished.");
+                break;
+
+            case GameOutcome.DeathRayBackfire:
+                Error("💀 DEATH RAY BACKFIRED!");
+                Message("The experimental weapon destroyed the Enterprise!");
+                break;
+
+            default:
+                Error($"MISSION FAILED: {outcome.ToString().SplitCamelCase()}");
+                Message("The Enterprise has been lost.");
+                break;
+        }
+
+        Message($"\nYour mission score will be calculated at end of game.");
+    }
+
+    /// <summary>
+    /// Handles time warning events.
+    /// </summary>
+    private void HandleTimeWarning(double timeRemaining)
+    {
+        Warning($"\n⚠️ WARNING: Only {timeRemaining:F1} stardates remaining!");
+        Warning("Mission time is running out!");
+    }
+}
+
+/// <summary>
+/// Extension methods for strings.
+/// </summary>
+internal static class StringExtensions
+{
+    public static string SplitCamelCase(this string str)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(str, "([A-Z])", " $1").Trim().ToUpper();
     }
 }
